@@ -1,3 +1,9 @@
+"""
+The dataset has images of size 100 by 100. What if i want to transform those into 32 by 32 images ? How can i do so. Also what changes do i need to apply to camera settings (poses, focal_length etc ?).
+
+What is focal length and why does it need to be scaled ?
+"""
+
 def meshgrid_xy(tensor1: torch.Tensor, tensor2: torch.Tensor) -> (torch.Tensor, torch.Tensor):
     """Mimick np.meshgrid(..., indexing="xy") in pytorch. torch.meshgrid only allows "ij" indexing.
     (If you're unsure what this means, safely skip trying to understand this, and run a tiny example!)
@@ -71,12 +77,6 @@ def get_ray_bundle(height: int, width: int, focal_length: float, tform_cam2world
     dim=-1
   )
 
-  """
-    (H, W, 3) -> B -> (H, W, 1, 3)
-
-    H, W, 1, 3
-          3, 3
-  """
   # ray_directions = torch.sum(directions[..., None, :] * tform_cam2world[:3, :3], dim=-1)
 
   ray_directions = directions @ tform_cam2world[:3, :3].T
@@ -147,9 +147,8 @@ def compute_query_points_from_rays(
 """
 def render_volume_density(
     radiance_field: torch.Tensor,
-    ray_origins: torch.Tensor,
     depth_values: torch.Tensor
-) -> (torch.Tensor, torch.Tensor, torch.Tensor):
+):
   r"""Differentiably renders a radiance field, given the origin of each ray in the
   "bundle", and the sampled depth values along them.
 
@@ -181,7 +180,7 @@ def render_volume_density(
   sigma_a = torch.nn.functional.relu(radiance_field[..., 3])
 
   # (1,)
-  one_e_10 = torch.tensor([1e10], dtype=ray_origins.dtype)
+  one_e_10 = torch.tensor([1e10])
 
   # (H, W, N)
   dists = torch.cat(
