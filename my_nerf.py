@@ -93,7 +93,7 @@ def nf_render_view(
     sigma_field = F.relu(sigma_field)
 
     # (*, N - 1)
-    deltas = depths[..., 1:] - depths[..., :1]
+    deltas = depths[..., 1:] - depths[..., :-1]
 
     # (*, N)
     deltas = torch.cat(
