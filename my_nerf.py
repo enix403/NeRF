@@ -129,32 +129,6 @@ def nf_render_view(
 
 # ==================================
 
-class VeryTinyNerfModel(torch.nn.Module):
-    def __init__(
-        self,
-        filter_size=128,
-        num_encoding_functions=6
-    ):
-
-        super(VeryTinyNerfModel, self).__init__()
-        # Input layer (default: 39 -> 128)
-        self.layer1 = torch.nn.Linear(3 + 3 * 2 * num_encoding_functions, filter_size)
-        # Layer 2 (default: 128 -> 128)
-        self.layer2 = torch.nn.Linear(filter_size, filter_size)
-        # Layer 3 (default: 128 -> 4)
-        self.layer3 = torch.nn.Linear(filter_size, 4)
-        # Short hand for torch.nn.functional.relu
-        self.relu = torch.nn.functional.relu
-
-    def forward(self, x):
-        x = self.relu(self.layer1(x))
-        x = self.relu(self.layer2(x))
-        x = self.layer3(x)
-        return x
-
-
-# ==================================
-
 def positional_encoding(
     # (*, D (3))
     points,
@@ -252,3 +226,46 @@ def nf_render_pose(
     )
 
     return rgb_map
+
+
+# ================================
+
+
+class VeryTinyNerfModel(torch.nn.Module):
+    def __init__(
+        self,
+        filter_size=128,
+        num_encoding_functions=6
+    ):
+
+        super(VeryTinyNerfModel, self).__init__()
+        # Input layer (default: 39 -> 128)
+        self.layer1 = torch.nn.Linear(3 + 3 * 2 * num_encoding_functions, filter_size)
+        # Layer 2 (default: 128 -> 128)
+        self.layer2 = torch.nn.Linear(filter_size, filter_size)
+        # Layer 3 (default: 128 -> 4)
+        self.layer3 = torch.nn.Linear(filter_size, 4)
+        # Short hand for torch.nn.functional.relu
+        self.relu = torch.nn.functional.relu
+
+    def forward(self, x):
+        x = self.relu(self.layer1(x))
+        x = self.relu(self.layer2(x))
+        x = self.layer3(x)
+        return x
+
+model = VeryTinyNerfModel()
+
+rgb_map = nf_render_pose(
+    model,
+    height,
+    width,
+    focal_length,
+    pose=poses[0],
+    thresh_near=2,
+    thresh_far=6,
+    num_samples_per_ray=32,
+    chunk_size=8096,
+)
+
+plt.imshow(rgb_map.detach())
