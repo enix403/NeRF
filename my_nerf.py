@@ -75,6 +75,7 @@ def nf_create_query_points(
         + ray_dirs[..., None, :] * depths[:, None]
     )
 
+    #      (H, W, N, 3)  (*, N)
     return query_points, depths
 
 
@@ -125,3 +126,103 @@ def nf_render_view(
 
     return rgb_map
 
+
+# ==================================
+
+def positional_encoding(
+    # (*, D (3))
+    points,
+    L=6,
+) -> torch.Tensor:
+    encoding = [points]
+
+    freqs = 2.0 ** torch.linspace(0.0, L - 1, L)
+
+    for freq in freqs:
+        encoding.append(torch.sin(points * freq))
+        encoding.append(torch.cos(points * freq))
+
+    if len(encoding) == 1:
+        return encoding[0]
+    else:
+        return torch.cat(encoding, dim=-1)
+
+
+def split_points_into_chunks(
+    # (B, L)
+    points: torch.Tensor,
+    chunk_size: int
+):
+    return [
+        points[i:i + chunk_size]
+        for i in range(0, points.shape[0], chunk_size)
+    ]
+
+def nf_render_pose(
+    model: torch.nn.Module,
+    height: int,
+    width: int,
+    focal_length: int,
+    pose: torch.Tensor,
+    thresh_near: int,
+    thresh_far: int,
+    num_samples_per_ray: int,
+    chunk_size: int,
+):
+
+    # Create rays
+    ray_origins, ray_dirs = nf_get_ray_bundle(
+        height,
+        width,
+        focal_length,
+        pose
+    )
+
+    # Create query points
+    query_points, depths = nf_create_query_points(
+        ray_origins,
+        ray_dirs,
+        thresh_near,
+        thresh_far,
+        num_samples_per_ray,
+    )
+
+    # pass query points to model
+    """
+    model: (B, 3) -> (B, 4)
+    """
+
+    # (H, W, N, 3)
+    # query_points
+
+    # (H*W*N, 3)
+    flat_query_points = query_points.view(-1, 3)
+
+    # apply positional encoding
+    flat_query_points = positional_encoding(flat_query_points)
+
+    # convert flat_query_points to chunks
+    chunks = split_points_into_chunks(
+        flat_query_points, chunk_size)
+    outputs = []
+
+    for chunk in chunks:
+        # (Bi, 4)
+        chunk_view_field = model(chunk)
+        outputs.append(chunk_view_field)
+
+    # (H*W*N, 4)
+    flat_view_field = torch.cat(outputs, dim=0)
+
+    # create view (radiance field)
+    # (H, W, N, 4)
+    view_field = flat_view_field.view(
+        list(query_points.shape[:-1]) + [-1]
+    )
+
+    rgb_map = nf_render_view(
+        view_field,
+        depths   
+    )
+
+    return rgb_map
