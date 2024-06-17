@@ -230,7 +230,6 @@ def nf_render_pose(
 
 # ================================
 
-
 class VeryTinyNerfModel(torch.nn.Module):
     def __init__(
         self,
@@ -256,16 +255,51 @@ class VeryTinyNerfModel(torch.nn.Module):
 
 model = VeryTinyNerfModel()
 
-rgb_map = nf_render_pose(
-    model,
-    height,
-    width,
-    focal_length,
-    pose=poses[0],
-    thresh_near=2,
-    thresh_far=6,
-    num_samples_per_ray=32,
-    chunk_size=8096,
-)
+# rgb_map = nf_render_pose(
+#     model,
+#     height,
+#     width,
+#     focal_length,
+#     pose=poses[0],
+#     thresh_near=2,
+#     thresh_far=6,
+#     num_samples_per_ray=32,
+#     chunk_size=8096,
+# )
 
-plt.imshow(rgb_map.detach())
+def predict(pose: tensor.Tensor):
+    return nf_render_pose(
+        model,
+        height,
+        width,
+        focal_length,
+        pose=pose,
+        thresh_near=2,
+        thresh_far=6,
+        num_samples_per_ray=32,
+        chunk_size=8096,
+    )
+
+# ================================
+# =========== Training ===========
+# ================================
+
+optimizer = torch.optim.Adam(model.parameters(), lr=5e-3)
+
+target_img_idx = torch.randint(images.shape[0])
+target_img = images[target_img_idx]
+target_pose = poses[target_img_idx]
+
+# Run one iteration of TinyNeRF and get the rendered RGB image.
+rgb_predicted = run_one_iter_of_tinynerf(height, width, focal_length,
+                                       target_tform_cam2world, near_thresh,
+                                       far_thresh, depth_samples_per_ray,
+                                       encode, get_minibatches)
+
+loss = torch.nn.functional.mse_loss(rgb_predicted, target_img)
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
+
+
+print('Done!')
