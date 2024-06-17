@@ -107,9 +107,6 @@ def nf_render_view(
     )
 
     # (H, W, N)
-    deltas = deltas.reshape(sigma_field.shape)
-
-    # (H, W, N)
     alpha = 1. - torch.exp(-sigma_field * deltas)
     # (H, W, N)
     weights = alpha * cumprod_exclusive(1. - alpha + 1e-10)
@@ -120,7 +117,7 @@ def nf_render_view(
       weights[..., None]
       *
       # (H, W, N, 3)
-      rgb
+      rgb_field
     )
 
     # (H, W, 3)
