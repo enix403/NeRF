@@ -303,3 +303,14 @@ optimizer.step()
 
 
 print('Done!')
+
+
+"""
+Todo list
+
+introduce view dependence
+make network bigger
+find a useful 3d dataset
+create 2d images from dataset
+
+"""
