@@ -315,8 +315,10 @@ make network bigger
 randomize query points
 find a useful 3d dataset
 create 2d images from dataset
-
+convert radiance field to 3d point cloud
 
 implement hierarchical sampling ?
+
+create a random 4x4 camera matrix transformation
 
 """
