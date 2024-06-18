@@ -198,15 +198,25 @@ def nf_render_pose(
     # (H, W, N, 3)
     # query_points
 
+    # ============ create input ============
+
     # (H*W*N, 3)
     flat_query_points = query_points.view(-1, 3)
-
-    # apply positional encoding
+    # (H*W*N, Lx)
     flat_query_points = positional_encoding(flat_query_points)
 
-    # convert flat_query_points to chunks
-    chunks = split_points_into_chunks(
-        flat_query_points, chunk_size)
+    # (H, W, N, Ld)
+    rd_per_point = ray_dirs[..., None, :].expand(query_points.shape)
+    # (H*W*N, Ld)
+    flat_rd_per_point = rd_per_point.reshape(-1, 3)
+    flat_rd_per_point = positional_encoding(flat_rd_per_point)
+
+    flat_inputs = torch.cat([flat_query_points, flat_rd_per_point], dim=-1)
+
+    # ============ call model  ============
+
+    # convert flat_inputs to chunks
+    chunks = split_points_into_chunks(flat_inputs, chunk_size)
     outputs = []
 
     for chunk in chunks:
@@ -242,7 +252,9 @@ class VeryTinyNerfModel(torch.nn.Module):
 
         super(VeryTinyNerfModel, self).__init__()
         # Input layer (default: 39 -> 128)
-        self.layer1 = torch.nn.Linear(3 + 3 * 2 * num_encoding_functions, filter_size)
+        self.layer1 = torch.nn.Linear(
+            3 + 3 * 2 * num_encoding_functions + 3 + 3 * 2 * num_encoding_functions,
+            filter_size)
         # Layer 2 (default: 128 -> 128)
         self.layer2 = torch.nn.Linear(filter_size, filter_size)
         # Layer 3 (default: 128 -> 4)
@@ -299,7 +311,6 @@ print('Done!')
 """
 Todo list
 
-introduce view dependence
 make network bigger
 randomize query points
 find a useful 3d dataset
