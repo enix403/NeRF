@@ -287,25 +287,27 @@ def predict(pose: tensor.Tensor):
 # =========== Training ===========
 # ================================
 
-optimizer = torch.optim.Adam(model.parameters(), lr=5e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
 
-target_img_idx = torch.randint(images.shape[0])
-target_img = images[target_img_idx]
-target_pose = poses[target_img_idx]
+# Train
+for i in range(1000):
+    # idx = torch.randint(images.shape[0], (1,)).item()
+    idx = i % images.shape[0]
+    target_pose = poses[idx]
+    # (H, W, 3)
+    target_image = images[idx]
+    
+    # (H, W, 3)
+    image_predicted = predict(target_pose)
 
-# Run one iteration of TinyNeRF and get the rendered RGB image.
-rgb_predicted = run_one_iter_of_tinynerf(height, width, focal_length,
-                                       target_tform_cam2world, near_thresh,
-                                       far_thresh, depth_samples_per_ray,
-                                       encode, get_minibatches)
+    loss = F.mse_loss(image_predicted, target_image)
 
-loss = torch.nn.functional.mse_loss(rgb_predicted, target_img)
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()
-
-
-print('Done!')
+    if i % 100 == 0:
+        print(f"{i}: {loss.item()}") 
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
 
 """
@@ -318,7 +320,4 @@ create 2d images from dataset
 convert radiance field to 3d point cloud
 
 implement hierarchical sampling ?
-
-create a random 4x4 camera matrix transformation
-
 """
