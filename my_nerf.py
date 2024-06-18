@@ -24,6 +24,7 @@ def nf_get_ray_bundle(
     height: int,
     width: int,
     focal_length: torch.Tensor,
+    # 4x4 transformation matrix
     pose: torch.Tensor
 ):
     points_x, points_y = torch.meshgrid(
@@ -46,6 +47,8 @@ def nf_get_ray_bundle(
         ),
         dim=-1
     )
+
+    ray_dirs = F.normalize(ray_dirs, dim=-1)
 
     transform_rot = pose[:3, :3]
     ray_dirs = ray_dirs @ transform_rot.T
@@ -162,7 +165,7 @@ def nf_render_pose(
     model: torch.nn.Module,
     height: int,
     width: int,
-    focal_length: int,
+    focal_length: torch.Tensor,
     pose: torch.Tensor,
     thresh_near: int,
     thresh_far: int,
@@ -255,18 +258,6 @@ class VeryTinyNerfModel(torch.nn.Module):
 
 model = VeryTinyNerfModel()
 
-# rgb_map = nf_render_pose(
-#     model,
-#     height,
-#     width,
-#     focal_length,
-#     pose=poses[0],
-#     thresh_near=2,
-#     thresh_far=6,
-#     num_samples_per_ray=32,
-#     chunk_size=8096,
-# )
-
 def predict(pose: tensor.Tensor):
     return nf_render_pose(
         model,
@@ -310,7 +301,11 @@ Todo list
 
 introduce view dependence
 make network bigger
+randomize query points
 find a useful 3d dataset
 create 2d images from dataset
+
+
+implement hierarchical sampling ?
 
 """
