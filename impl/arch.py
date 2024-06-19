@@ -4,7 +4,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-
 @dataclass
 class ModelConfig:
     # size of the hidden layer

@@ -1,6 +1,3 @@
-import torch
-import torch.nn.functional as F
-
 from .arch import *
 from .rendering import nf_render_pose
 from .data_source import *
@@ -11,7 +8,7 @@ model = VeryTinyNerfModel(config=ModelConfig(
     embed_num_dir=6,
 ))
 
-def predict(pose: torch.Tensor):
+def predict(model: torch.nn.Module, pose: torch.Tensor):
     return nf_render_pose(
         model,
         height,
@@ -54,15 +51,3 @@ if __name__ == '__main__':
 
 
 
-"""
-Todo list
-
-multiheaded nerf
-make network bigger
-randomize query points
-find a useful 3d dataset
-create 2d images from dataset
-convert radiance field to 3d point cloud
-
-implement hierarchical sampling ?
-"""
