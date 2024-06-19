@@ -14,7 +14,6 @@ class ModelConfig:
 def embed_len_3d(embed_num: int):
     return 3 + 3 * 2 * embed_num
 
-
 def sinusoidal_encoding(
     # (*, D (3))
     points: torch.Tensor,
