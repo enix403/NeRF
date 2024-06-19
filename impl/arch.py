@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 import torch
+from torch import nn
+import torch.nn.functional as F
 
 @dataclass
 class ModelConfig:
@@ -62,8 +64,8 @@ class VeryTinyNerfModel(torch.nn.Module):
         # (B, 3)
         viewdirs = queries[..., 3:]
 
-        encoded_points = sinusoidal_encoding(points, config.embed_num_pos)
-        encoded_viewdirs = sinusoidal_encoding(viewdirs, config.embed_num_dir)
+        encoded_points = sinusoidal_encoding(points, self.config.embed_num_pos)
+        encoded_viewdirs = sinusoidal_encoding(viewdirs, self.config.embed_num_dir)
 
         x = torch.cat([encoded_points, encoded_viewdirs], dim=-1)
 

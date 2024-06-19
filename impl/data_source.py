@@ -1,4 +1,8 @@
-def resize_to(images, height, width):
+import numpy as np
+import torch
+import torchvision as tv
+
+def resize_to(images: torch.Tensor, height: int, width: int):
     # images: (B, old_H, old_W, C)
 
     # (B, C, old_H, old_W)
@@ -21,6 +25,8 @@ def resize_to(images, height, width):
     return resized_images
 
 
+data = np.load("tiny_nerf_data.npz")
+
 images = data['images']
 poses = data['poses']
 focal_length = data['focal']
@@ -29,15 +35,17 @@ focal_length = data['focal']
 orig_size = images.shape[1]
 downscaled_size = 32
 
-# Images
 # (B, H, W, C)
 images = torch.from_numpy(images)
 images = resize_to(images, downscaled_size, downscaled_size)
-# Camera extrinsics (poses)
+
+# 4x4 camera transform matrices (poses) that transform a point
+# from camera space to world space
+# (B, 4, 4)
 poses = torch.from_numpy(poses)
-# Focal length (intrinsics)
+
+# (1,) (scalar)
 focal_length = torch.from_numpy(focal_length)
-# Rescale focal length
 focal_length = focal_length * downscaled_size / orig_size
 
 # print(images.shape)

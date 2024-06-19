@@ -1,3 +1,7 @@
+import torch
+from torch import nn
+import torch.nn.functional as F
+
 def nf_get_ray_bundle(
     height: int,
     width: int,
@@ -16,9 +20,9 @@ def nf_get_ray_bundle(
     # y in NDC increases upwards
     points_y = -(points_y - height / 2.0) / focal_length
     # Camera faces the -ve Z direction in NDC
-    points_z = -tr.ones_like(points_x)
+    points_z = -torch.ones_like(points_x)
 
-    ray_dirs = tr.stack(
+    ray_dirs = torch.stack(
         (
             points_x,
             points_y,
