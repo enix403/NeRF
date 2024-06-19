@@ -182,7 +182,7 @@ def nf_render_pose(
         list(query_points.shape[:-1]) + [-1]
     )
 
-    rgb_map = nf_render_view(
+    rgb_map = nf_render_view_field(
         view_field,
         depths   
     )
@@ -200,3 +200,10 @@ def split_points_into_chunks(
         points[i:i + chunk_size]
         for i in range(0, points.shape[0], chunk_size)
     ]
+
+
+def cumprod_exclusive(tensor: torch.Tensor) -> torch.Tensor:
+    cumprod = torch.cumprod(tensor, dim=-1)
+    cumprod = torch.roll(cumprod, 1, dims=-1)
+    cumprod[..., 0] = 1.
+    return cumprod

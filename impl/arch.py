@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+
 @dataclass
 class ModelConfig:
     # size of the hidden layer
@@ -23,7 +24,7 @@ def sinusoidal_encoding(
 ):
     encoding = [points]
 
-    freqs = 2.0 ** torch.linspace(0.0, L - 1, L)
+    freqs = 2.0 ** torch.linspace(0.0, embed_num - 1, embed_num)
 
     for freq in freqs:
         encoding.append(torch.sin(points * freq))
