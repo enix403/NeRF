@@ -75,9 +75,12 @@ def nf_render_view_field(
     rgb_field = view_field[..., :3]
     # (H, W, N)
     sigma_field = view_field[..., 3]
-
+    
     rgb_field = F.sigmoid(rgb_field)
     sigma_field = F.relu(sigma_field)
+
+    # print(rgb_field.max())
+    # print(sigma_field.max())
 
     # (*, N - 1)
     deltas = depths[..., 1:] - depths[..., :-1]
