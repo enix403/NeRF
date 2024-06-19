@@ -95,10 +95,13 @@ class SeparatedHeadsNerfModel(nn.Module):
         )
 
         self.output_color = nn.Sequential(
-            nn.Linear(hidden_size + embed_len_3d(config.embed_num_dir), hidden_size),
+            nn.Linear(hidden_size
+             + embed_len_3d(config.embed_num_dir)
+             + embed_len_3d(config.embed_num_pos)
+             , hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size), nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size), nn.ReLU(),
             nn.Linear(hidden_size, 3),
         )
 
@@ -126,7 +129,7 @@ class SeparatedHeadsNerfModel(nn.Module):
         feature = self.output_feature(act)
 
         # (B, H + Ld)
-        feature = torch.cat([feature, x_dir], dim=-1)
+        feature = torch.cat([feature, x_dir, x_pos], dim=-1)
 
         # (B, 3)
         color = self.output_color(feature)

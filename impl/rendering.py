@@ -31,8 +31,6 @@ def nf_get_ray_bundle(
         dim=-1
     )
 
-    ray_dirs = F.normalize(ray_dirs, dim=-1)
-
     transform_rot = pose[:3, :3]
     ray_dirs = ray_dirs @ transform_rot.T
 
@@ -158,12 +156,14 @@ def nf_render_pose(
     flat_query_points = query_points.view(-1, 3)
 
     # (H, W, N, 3)
-    rd_per_point = ray_dirs[..., None, :].expand(query_points.shape)
+    viewdirs_origin = ray_dirs / torch.linalg.norm(ray_dirs, dim=-1)[..., None]
+    viewdirs = viewdirs_origin[..., None, :].expand(query_points.shape)
+    
     # (H*W*N, 3)
-    flat_rd_per_point = rd_per_point.reshape(-1, 3)
+    flat_viewdirs = viewdirs.reshape(-1, 3)
 
     # (H*W*N, 6)
-    flat_inputs = torch.cat([flat_query_points, flat_rd_per_point], dim=-1)
+    flat_inputs = torch.cat([flat_query_points, flat_viewdirs], dim=-1)
 
     # ============ call model  ============
 
