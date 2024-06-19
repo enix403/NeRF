@@ -1,23 +1,23 @@
-def resize_to(images, height, width):
+# def resize_to(images, height, width):
 
-    # Convert images to (B, 3, old_H, old_W)
-    images = images.permute(0, 3, 1, 2)
+#     # Convert images to (B, 3, old_H, old_W)
+#     images = images.permute(0, 3, 1, 2)
 
-    # Define the transform
-    resize_transform = tv.transforms.Compose([
-        tv.transforms.Resize((height, width))  # Resize to 32x32
-    ])
+#     # Define the transform
+#     resize_transform = tv.transforms.Compose([
+#         tv.transforms.Resize((height, width))  # Resize to 32x32
+#     ])
 
-    # Apply the transform to each image in the batch
-    resized_images = torch.stack([
-        resize_transform(image)
-        for image in images
-    ])
+#     # Apply the transform to each image in the batch
+#     resized_images = torch.stack([
+#         resize_transform(image)
+#         for image in images
+#     ])
 
-    # Convert back to (B, 32, 32, 3)
-    resized_images = resized_images.permute(0, 2, 3, 1)
+#     # Convert back to (B, 32, 32, 3)
+#     resized_images = resized_images.permute(0, 2, 3, 1)
 
-    return resized_images
+#     return resized_images
 
 
 def nf_get_ray_bundle(
@@ -132,23 +132,23 @@ def nf_render_view(
 
 # ==================================
 
-def positional_encoding(
-    # (*, D (3))
-    points,
-    L=6,
-) -> torch.Tensor:
-    encoding = [points]
+# def positional_encoding(
+#     # (*, D (3))
+#     points,
+#     L=6,
+# ) -> torch.Tensor:
+#     encoding = [points]
 
-    freqs = 2.0 ** torch.linspace(0.0, L - 1, L)
+#     freqs = 2.0 ** torch.linspace(0.0, L - 1, L)
 
-    for freq in freqs:
-        encoding.append(torch.sin(points * freq))
-        encoding.append(torch.cos(points * freq))
+#     for freq in freqs:
+#         encoding.append(torch.sin(points * freq))
+#         encoding.append(torch.cos(points * freq))
 
-    if len(encoding) == 1:
-        return encoding[0]
-    else:
-        return torch.cat(encoding, dim=-1)
+#     if len(encoding) == 1:
+#         return encoding[0]
+#     else:
+#         return torch.cat(encoding, dim=-1)
 
 
 def split_points_into_chunks(
@@ -313,6 +313,7 @@ for i in range(1000):
 """
 Todo list
 
+multiheaded nerf
 make network bigger
 randomize query points
 find a useful 3d dataset
