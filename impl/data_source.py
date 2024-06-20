@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import torch
 import torchvision as tv
@@ -25,7 +27,9 @@ def resize_to(images: torch.Tensor, height: int, width: int):
     return resized_images
 
 
-data = np.load("tiny_nerf_data.npz")
+data = np.load(str(
+    Path(__file__).parent.parent / "data" / "3d_vehicle.npz"
+))
 
 images = data['images']
 poses = data['poses']
