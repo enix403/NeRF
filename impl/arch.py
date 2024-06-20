@@ -35,12 +35,32 @@ def sinusoidal_encoding(
         return torch.cat(encoding, dim=-1)
 
 
-class VeryTinyNerfModel(torch.nn.Module):
+class BaseNeRF(torch.nn.Module):
     def __init__(self, config: ModelConfig):
         super().__init__()
-
         self.config = config
-        hidden_size = config.hidden_size
+
+    def split_queries(
+        self,
+        # (B, 6 (3 for position and 3 for view direction))
+        queries: torch.Tensor
+    ):
+        # (B, 3)
+        points = queries[..., :3]
+        # (B, 3)
+        viewdirs = queries[..., 3:]
+
+        x_pos = sinusoidal_encoding(points, self.config.embed_num_pos)
+        x_dir = sinusoidal_encoding(viewdirs, self.config.embed_num_dir)
+
+        return x_pos, x_dir
+
+
+class SimpleNeRF(BaseNeRF):
+    def __init__(self, config: ModelConfig):
+        super().__init__(config)
+
+        hidden_size = self.config.hidden_size
 
         self.layers = nn.Sequential(
             # Layer 1: input (both pos and view dir)
@@ -56,27 +76,16 @@ class VeryTinyNerfModel(torch.nn.Module):
             torch.nn.Linear(hidden_size, 4),
         )
 
-    def forward(self, queries):
-        # query: (B, 6 (3 for pos and 3 for dir))
-
-        # (B, 3)
-        points = queries[..., :3]
-        # (B, 3)
-        viewdirs = queries[..., 3:]
-
-        encoded_points = sinusoidal_encoding(points, self.config.embed_num_pos)
-        encoded_viewdirs = sinusoidal_encoding(viewdirs, self.config.embed_num_dir)
-
-        x = torch.cat([encoded_points, encoded_viewdirs], dim=-1)
-
+    def forward(self, queries: torch.Tensor):
+        x_pos, x_dir = self.split_queries(queries)
+        x = torch.cat([x_pos, x_dir], dim=-1)
         return self.layers(x)
 
 
-class SeparatedHeadsNerfModel(nn.Module):
+class MultiHeadedNeRF(BaseNeRF):
     def __init__(self, config: ModelConfig):
-        super().__init__()
+        super().__init__(config)
 
-        self.config = config
         hidden_size = config.hidden_size
 
         self.block1 = nn.Sequential(
@@ -106,29 +115,19 @@ class SeparatedHeadsNerfModel(nn.Module):
         )
 
 
-    def forward(self, queries):
-        # query: (B, 6 (3 for pos and 3 for dir))
+    def forward(self, queries: torch.Tensor):
+        x_pos, x_dir = self.split_queries(queries)
 
-        # (B, 3)
-        points = queries[..., :3]
-        # (B, 3)
-        viewdirs = queries[..., 3:]
-
-        # (B, Lx)
-        x_pos = sinusoidal_encoding(points, self.config.embed_num_pos)
-        # (B, Ld)
-        x_dir = sinusoidal_encoding(viewdirs, self.config.embed_num_dir)
-
-        # (B, H)
+        # (B, F)
         act = self.block1(x_pos)
-        
+
         # (B, 1)
         sigma = self.output_sigma(act)
 
-        # (B, H)
+        # (B, F)
         feature = self.output_feature(act)
 
-        # (B, H + Ld)
+        # (B, F + Ld + Lx)
         feature = torch.cat([feature, x_dir, x_pos], dim=-1)
 
         # (B, 3)
