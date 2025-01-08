@@ -2,7 +2,6 @@
 
 This project is a Python implementation of [**Neural Radiance Fields (NeRF)**](https://arxiv.org/abs/2003.08934), a powerful technique for photorealistic 3D scene reconstruction using deep learning. NeRF represents 3D scenes as a continuous volumetric representation parameterized by a neural network and allows the rendering of novel views from a sparse set of input images.
 
-
 ## Overview
 This implementation builds the foundational components of NeRF, including ray marching, volumetric rendering, positional encoding, and a multi-headed neural network for predicting radiance fields. The model is trained to learn a scene representation from input images and corresponding camera poses.
 
@@ -44,3 +43,8 @@ A modular design with separate networks for density prediction (`sigma`) , follo
 
 ## References
 - **Original NeRF Paper**: [https://arxiv.org/abs/2003.08934](https://arxiv.org/abs/2003.08934)
+
+
+## Other
+
+I actually ended up writing a blog post about NeRF: [Implementing And Understanding NeRF](https://enix403.github.io/posts/implementing-and-understanding-nerf/)
